@@ -5,7 +5,7 @@ import random
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, TrainingArguments
-from trl.commands.cli_utils import  TrlParser
+from trl.scripts.utils import TrlParser
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -14,14 +14,14 @@ from transformers import (
 
 )
 from trl import setup_chat_format
+from trl import SFTTrainer, SFTConfig
 from peft import LoraConfig
+   
+from dotenv import load_dotenv
 
+load_dotenv("/home/xliu1/creativity_eval/.env")
 
-from trl import (
-   SFTTrainer)
-
-os.environ["HF_TOKEN"] = "your_token"
-os.environ["HF_HOME"] = "your_hub" 
+token = os.getenv("HF_TOKEN")
 # Comment in if you want to use the Llama 3 instruct template but make sure to add modules_to_save
 LLAMA_3_CHAT_TEMPLATE="{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
 
@@ -81,7 +81,7 @@ def training_function(script_args, training_args):
     ################
 
     # Tokenizer        
-    tokenizer = AutoTokenizer.from_pretrained(script_args.model_id, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(script_args.model_id, use_fast=True, token=token)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.chat_template = LLAMA_3_CHAT_TEMPLATE
     
@@ -117,6 +117,7 @@ def training_function(script_args, training_args):
         attn_implementation="sdpa", # use sdpa, alternatively use "flash_attention_2"
         torch_dtype=quant_storage_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,  # this is needed for gradient checkpointing
+        token=token
     )
     #model = model.float()
     
@@ -145,16 +146,16 @@ def training_function(script_args, training_args):
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        dataset_text_field="text",
+        # dataset_text_field="text",  # we dont need this for newer trl
         eval_dataset=test_dataset,
         peft_config=peft_config,
-        max_seq_length=script_args.max_seq_length,
-        tokenizer=tokenizer,
-        packing=True,
-        dataset_kwargs={
-            "add_special_tokens": False,  # We template with special tokens
-            "append_concat_token": False,  # No need to add additional separator token
-        },
+        # max_seq_length=script_args.max_seq_length,
+        processing_class=tokenizer,
+        # packing=True,
+        # dataset_kwargs={
+        #     "add_special_tokens": False,  # We template with special tokens
+        #     "append_concat_token": False,  # No need to add additional separator token
+        # },
     )
     if trainer.accelerator.is_main_process:
         trainer.model.print_trainable_parameters()
@@ -175,8 +176,8 @@ def training_function(script_args, training_args):
     trainer.save_model()
     
 if __name__ == "__main__":
-    parser = TrlParser((ScriptArguments, TrainingArguments))
-    script_args, training_args = parser.parse_args_and_config()    
+    parser = TrlParser((ScriptArguments, SFTConfig))
+    script_args, training_args = parser.parse_args_and_config()
     
     # set use reentrant to False
     if training_args.gradient_checkpointing:
