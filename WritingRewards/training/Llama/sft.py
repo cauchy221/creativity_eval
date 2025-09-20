@@ -67,14 +67,14 @@ def training_function(script_args, training_args):
     
     train_dataset = load_dataset(
         "json",
-        data_files=os.path.join(script_args.dataset_path, "train_dataset.json"),
+        data_files=os.path.join(script_args.dataset_path, "Conversations_with_Friends-train.json"),
         split="train",
     )
-    test_dataset = load_dataset(
-        "json",
-        data_files=os.path.join(script_args.dataset_path, "test_dataset.json"),
-        split="train",
-    )
+    # test_dataset = load_dataset(
+    #     "json",
+    #     data_files=os.path.join(script_args.dataset_path, "test_dataset.json"),
+    #     split="train",
+    # )
 
     ################
     # Model & Tokenizer
@@ -90,7 +90,7 @@ def training_function(script_args, training_args):
         return{"text":  tokenizer.apply_chat_template(examples["messages"], tokenize=False)}
     
     train_dataset = train_dataset.map(template_dataset, remove_columns=["messages"])
-    test_dataset = test_dataset.map(template_dataset, remove_columns=["messages"])
+    # test_dataset = test_dataset.map(template_dataset, remove_columns=["messages"])
     
     # print random sample
     with training_args.main_process_first(
@@ -147,7 +147,7 @@ def training_function(script_args, training_args):
         args=training_args,
         train_dataset=train_dataset,
         # dataset_text_field="text",  # we dont need this for newer trl
-        eval_dataset=test_dataset,
+        # eval_dataset=test_dataset,
         peft_config=peft_config,
         # max_seq_length=script_args.max_seq_length,
         processing_class=tokenizer,
