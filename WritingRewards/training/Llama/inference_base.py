@@ -121,7 +121,7 @@ if __name__ == "__main__":
             prompt_len = input_ids.size(-1)
 
             generations = []
-            chunk = 1  # same parallel sampling batch size you use for instruct
+            chunk = 50  # same parallel sampling batch size you use for instruct
             total = 100
             for i in range(0, total, chunk):
                 cur = min(chunk, total - i)
