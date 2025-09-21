@@ -104,6 +104,8 @@ if __name__ == "__main__":
                         "generation_num": len(generations) + 1,
                         "generation": text
                     })
+                # print(generations)
+                # break
 
             output_example = example.copy()
             output_example["generations"] = generations
@@ -112,6 +114,7 @@ if __name__ == "__main__":
             # --- ADDED: autosave every N examples ---
             if (idx + 1) % args.autosave_every == 0:
                 save_partial(args.output_json, predictions)
+            # break
 
     finally:
         # --- ADDED: always save final state (even if crash/interrupt) ---

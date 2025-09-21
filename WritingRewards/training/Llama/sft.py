@@ -67,7 +67,7 @@ def training_function(script_args, training_args):
     
     train_dataset = load_dataset(
         "json",
-        data_files=os.path.join(script_args.dataset_path, "Conversations_with_Friends-train.json"),
+        data_files=script_args.dataset_path,
         split="train",
     )
     # test_dataset = load_dataset(
@@ -114,7 +114,7 @@ def training_function(script_args, training_args):
     model = AutoModelForCausalLM.from_pretrained(
         script_args.model_id,
         quantization_config=quantization_config,
-        attn_implementation="sdpa", # use sdpa, alternatively use "flash_attention_2"
+        attn_implementation="flash_attention_2", # use "flash_attention_2" for packing
         torch_dtype=quant_storage_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,  # this is needed for gradient checkpointing
         token=token
