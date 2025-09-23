@@ -1,12 +1,8 @@
-tensorboard==2.19.0
-accelerate==1.10.1
-bitsandbytes==0.45.2
 datasets==4.1.1
-trl==0.23.0
-peft==0.10.0
-pillow==11.1.0
 numpy==1.24.3
+peft==0.10.0
+python-dotenv==1.1.1
 torch==2.2.2
-torchaudio==2.2.2
-torchvision==0.17.2
+tqdm==4.67.1
 transformers==4.56.2
+trl==0.23.0
